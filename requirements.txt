@@ -1,0 +1,8 @@
+pymupdf
+pillow
+
+transformers
+torch
+
+google-auth
+google-api-python-client
