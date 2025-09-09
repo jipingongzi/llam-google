@@ -30,7 +30,6 @@ def pdf_image_pages_to_images(pdf_path,
 
         with fitz.open(pdf_path) as pdf_doc:
             total_pages = len(pdf_doc)
-            print(f"检测到PDF共{total_pages}页，仅处理含图片的页面...")
 
             for page_idx in range(total_pages):
                 page = pdf_doc[page_idx]
@@ -54,9 +53,6 @@ def pdf_image_pages_to_images(pdf_path,
                         page_img.save(str(img_save_path))
 
                     image_paths.append(str(img_save_path.resolve()))
-                    print(f"已转换：第{actual_page_num}页 → {img_save_path.name}")
-                else:
-                    print(f"跳过：第{actual_page_num}页（无图片）")
 
         if not image_paths:
             return []
@@ -67,12 +63,3 @@ def pdf_image_pages_to_images(pdf_path,
         print(str(e))
         return []
 
-if __name__ == "__main__":
-    TEST_PDF_PATH = "test.pdf"
-
-    result = pdf_image_pages_to_images(
-        pdf_path=TEST_PDF_PATH,
-        img_format="png",
-        dpi=200
-    )
-    print(result)

@@ -1,0 +1,31 @@
+class pdf_image_dto:
+
+    def __init__(self, file_id, page_number):
+        self._file_id = file_id
+        self._page_number = page_number
+        self._analysis_result = None
+
+    @property
+    def file_id(self):
+        return self._file_id
+
+    @file_id.setter
+    def file_id(self, value):
+        self._file_id = value
+
+    @property
+    def page_number(self):
+        return self._page_number
+
+    @page_number.setter
+    def page_number(self, value):
+        self._page_number = value
+
+    @property
+    def analysis_result(self):
+        return self._analysis_result
+
+    @analysis_result.setter
+    def analysis_result(self, value):
+        self._analysis_result = value
+
