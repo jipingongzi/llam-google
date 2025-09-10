@@ -1,6 +1,7 @@
 import os
 from uuid import uuid1
 from typing import List
+from typing import Generator
 from llama_index.core import SimpleDirectoryReader, Document, VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.core.indices.base import BaseQueryEngine
 from dto.pdf_image_dto import pdf_image_dto
@@ -23,7 +24,7 @@ def vector(file_id: str, file_path: str, dtos: List[pdf_image_dto]) -> BaseQuery
     if os.path.exists(persist_dir) and os.path.isdir(persist_dir):
         storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
         index = load_index_from_storage(storage_context)
-        return index.as_query_engine()
+        return index.as_query_engine(similarity_top_key=5, streaming=True)
     pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     dto_documents = []
     for dto in dtos:
@@ -43,14 +44,16 @@ def vector(file_id: str, file_path: str, dtos: List[pdf_image_dto]) -> BaseQuery
     all_documents = pdf_documents + dto_documents
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
-    return vector_index.as_query_engine()
+    return vector_index.as_query_engine(similarity_top_key=5, streaming=True)
 
 
-def query(question: str, query_engine: BaseQueryEngine) -> str:
-    print("---------------------------------------")
+def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, None]:
+    print("\n---------------------------------------")
     print(f"Q: {question}")
     answer = query_engine.query(question)
-    print(f"A: {answer}")
-    print("---------------------------------------")
-    return str(answer)
+    # answer.print_response_stream()
+    full_answer = []
+    for token in answer.response_gen:
+        full_answer.append(token)
+        yield token
 
