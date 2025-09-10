@@ -1,8 +1,8 @@
-from doc_fetcher import export_drive_file
-from image_fetcher import pdf_image_pages_to_images
-from model_analyst import analyze_image, analyze_image_mock
+from rag.doc_fetcher import export_drive_file
+from rag.image_fetcher import pdf_image_pages_to_images
+from rag.model_analyst import analyze_image_mock
 from dto.pdf_image_dto import pdf_image_dto
-from model_vector import vector, query
+from rag.model_vector import vector, query
 
 
 def extract_page_number(image_path: str) -> int:

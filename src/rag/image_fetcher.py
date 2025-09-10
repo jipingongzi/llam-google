@@ -4,13 +4,13 @@ import os
 
 
 def pdf_image_pages_to_images(pdf_path,
-                              output_relative_dir="../doc/pic",
+                              output_relative_dir="doc/pic",
                               img_format="png",
                               dpi=200):
     try:
-        current_file_path = Path(os.path.abspath(__file__))
-        current_file_dir = current_file_path.parent
-        output_dir = current_file_dir / output_relative_dir
+        current_script_path = Path(os.path.abspath(__file__))
+        script_parent_dir = current_script_path.parent.parent.parent
+        output_dir = script_parent_dir / output_relative_dir
         output_dir.mkdir(parents=True, exist_ok=True)
 
         pdf_path = Path(pdf_path).resolve()

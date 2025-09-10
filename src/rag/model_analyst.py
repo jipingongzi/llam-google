@@ -65,5 +65,5 @@ def analyze_image(image_path):
 
 # 测试示例
 if __name__ == "__main__":
-    test_image_path = 'C:\\Users\\Sean_Xiao\\github-data\\llam-google\\doc\\pic\\TDD EPAM BMS system_page6.png'
+    test_image_path = '/doc/pic/TDD EPAM BMS system_page6.png'
     print(analyze_image(test_image_path))
