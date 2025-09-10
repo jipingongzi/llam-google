@@ -11,4 +11,4 @@ google-api-python-client
 llama-index
 llama-index-embeddings-huggingface
 llama-index-llms-deepseek
-llama-index-vector-stores-chroma
+treelib

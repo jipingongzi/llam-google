@@ -8,8 +8,11 @@ from dto.pdf_image_dto import pdf_image_dto
 from llama_index.core import Settings
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+import logging
+import sys
+# open detail log, will show prompt
+logging.basicConfig(stream=sys.stdout, format="%(asctime)s %(message)s", level=logging.DEBUG, force=True)
 
-# 初始化全局LLM和嵌入模型
 llm = DeepSeek(model="deepseek-chat", api_key="sk-9b5776bd68e045f7ae2171077134b2a4")
 Settings.llm = llm
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
@@ -39,8 +42,8 @@ def vector(file_id: str, file_path: str, dtos: List[pdf_image_dto]) -> BaseQuery
 
 def query(question: str, query_engine: BaseQueryEngine) -> str:
     print("---------------------------------------")
-    print(f"查询问题: {question}")
+    print(f"Q: {question}")
     answer = query_engine.query(question)
-    print(f"AI回答: {answer}")
+    print(f"A: {answer}")
     print("---------------------------------------")
     return str(answer)
