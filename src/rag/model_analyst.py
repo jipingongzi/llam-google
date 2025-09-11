@@ -2,7 +2,10 @@ import torch
 from transformers import pipeline
 from PIL import Image
 from pathlib import Path
-
+'''
+this py file will call local model to process model,
+at first time it will download mode from Huggingface
+'''
 
 def analyze_image_mock(image_path):
     return ("This image is a design document for a Booking Management System, which presents the overall architecture, components, and technology selection of the system from three aspects: system context, high-level description, and key design decisions. "

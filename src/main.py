@@ -1,6 +1,6 @@
 from rag.doc_fetcher import export_drive_file
 from rag.image_fetcher import pdf_image_pages_to_images
-from rag.model_analyst import analyze_image_mock
+from rag.model_analyst_qwen import analyze_image
 from dto.pdf_image_dto import pdf_image_dto
 from rag.model_vector import vector, query
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         extract_page_number(img_path)
         image_dto = pdf_image_dto(file_id=file_id, page_number=extract_page_number(img_path))
         print(f"start analysis image:{img_path}")
-        image_dto.analysis_result = analyze_image_mock(img_path)
+        image_dto.analysis_result = analyze_image(img_path)
         print(f"image analysis:{image_dto}")
         image_dtos.append(image_dto)
     print("start vectorize")
