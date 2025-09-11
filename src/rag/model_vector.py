@@ -16,21 +16,32 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 llm = DeepSeek(model="deepseek-chat", api_key="sk-9b5776bd68e045f7ae2171077134b2a4")
 Settings.llm = llm
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+Settings.embed_model = HuggingFaceEmbedding(
+    model_name="BAAI/bge-large-en-v1.5",
+    max_length=512
+)
 
 
-def vector(file_id: str, file_path: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
+def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
     persist_dir = "persist_dir"
-    if os.path.exists(persist_dir) and os.path.isdir(persist_dir):
-        storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
-        index = load_index_from_storage(storage_context)
-        return index.as_query_engine(similarity_top_key=5, streaming=True)
     pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
+    enhanced_pdf_docs = []
+    for doc in pdf_documents:
+        page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "未知")
+        doc.metadata.update({
+            "file_id": file_id,
+            "file_name": file_name,
+            "page_number": page_num,
+            "source_type": "pdf_text",
+            "pdf_source_path": file_path
+        })
+        enhanced_pdf_docs.append(doc)
     dto_documents = []
     for dto in dtos:
         if dto.analysis_result and dto.analysis_result.strip():
             metadata = {
                 "file_id": file_id,
+                "file_name": file_name,
                 "page_number": dto.page_number,
                 "source_type": "pdf_image",
                 "pdf_source_path": file_path
@@ -41,7 +52,14 @@ def vector(file_id: str, file_path: str, dtos: List[pdf_image_dto]) -> BaseQuery
                 id=str(uuid1())
             )
             dto_documents.append(doc)
-    all_documents = pdf_documents + dto_documents
+    all_documents = enhanced_pdf_docs + dto_documents
+
+    if os.path.exists(persist_dir) and os.path.isdir(persist_dir):
+        storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
+        index = load_index_from_storage(storage_context)
+        index.insert_nodes(all_documents)
+        return index.as_query_engine(similarity_top_key=5, streaming=True)
+
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
     return vector_index.as_query_engine(similarity_top_key=5, streaming=True)
@@ -57,3 +75,18 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
         full_answer.append(token)
         yield token
 
+
+def query_print(question: str, query_engine: BaseQueryEngine):
+    print("\n---------------------------------------")
+    print(f"Q: {question}")
+    answer = query_engine.query(question)
+    answer.print_response_stream()
+    print("\n\n信息来源：")
+    for i, node in enumerate(answer.source_nodes, 1):
+        print(
+            f"{i}. file id: {node.node.metadata.get('file_id', 'unknown')}, "
+            f"file name: {node.node.metadata.get('file_name', 'unknown')}, "
+            f"PDF page: {node.node.metadata.get('page_number', 'unknown')}, "
+            f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
+            f"score: {node.score:.4f}"
+        )

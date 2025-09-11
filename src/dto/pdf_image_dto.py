@@ -5,6 +5,12 @@ class pdf_image_dto:
         self._page_number = page_number
         self._analysis_result = None
 
+    def __str__(self):
+        return (f"file_id={self.file_id}, "
+                f"pdf_image_dto(page_number={self.page_number}, "
+                f"analysis_result='{self.analysis_result}' "
+                )
+
     @property
     def file_id(self):
         return self._file_id
@@ -28,4 +34,3 @@ class pdf_image_dto:
     @analysis_result.setter
     def analysis_result(self, value):
         self._analysis_result = value
-

@@ -13,11 +13,10 @@ def process_path(image_path):
     return f"data:image/jpeg;base64,{encoded}"
 
 
-def analyze_image(url_or_path) -> str:
+def analyze_image(url_or_path, file_name) -> str:
     # if it's a local file, base64 encode it
     if os.path.exists(url_or_path):
         url_or_path = process_path(url_or_path)
-    # mostly from sglang test page
     base_url = f"{DEPLOYMENT_LINK}/v1"
     print(base_url)
     client = openai.Client(api_key="EMPTY", base_url=base_url)
@@ -28,7 +27,7 @@ def analyze_image(url_or_path) -> str:
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Describe this image"},
+                    {"type": "text", "text": "Describe this image of file <" + file_name + ">"},
                     {
                         "type": "image_url",
                         "image_url": {

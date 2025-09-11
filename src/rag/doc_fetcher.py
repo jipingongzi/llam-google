@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def get_filename_without_extension(filename):
     last_dot_index = filename.rfind('.')
     if last_dot_index != -1 and last_dot_index != len(filename) - 1:
@@ -26,4 +27,4 @@ def export_drive_file(file_id, drive_service) -> str:
 
     with open(save_path, "wb") as f:
         f.write(request.execute())
-    return save_path
+    return str(save_path.resolve())

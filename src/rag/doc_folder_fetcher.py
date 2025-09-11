@@ -4,7 +4,7 @@ from googleapiclient.discovery import build
 import json
 import logging
 
-from doc_fetcher import export_drive_file
+from .doc_fetcher import export_drive_file
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -15,6 +15,7 @@ GOOGLE_MIME_TYPES = {
     "application/vnd.google-apps.presentation": "application/pdf",
     "application/vnd.google-apps.drawing": "application/pdf"
 }
+
 
 def get_drive_service():
     creds_path = Path.home() / ".credentials" / "credentials.json"
@@ -37,7 +38,6 @@ def get_drive_service():
     return build("drive", "v3", credentials=credentials)
 
 
-
 def get_detailed_file_info(service, file_id):
     fields = (
         "id, name, mimeType, parents, driveId, createdTime, modifiedTime, "
@@ -51,7 +51,7 @@ def get_detailed_file_info(service, file_id):
     ).execute()
 
 
-def list_folder_contents(service, folder_id):
+def list_folder_contents(service, folder_id) -> []:
     results = []
     folder_info = get_detailed_file_info(service, folder_id)
     logger.info(f"\n===== folder: {folder_info.get('name')} (ID: {folder_id}) =====")
@@ -88,9 +88,9 @@ def list_folder_contents(service, folder_id):
             else:
                 logger.info(f"\n export: --- file: {item_name} (ID: {item_id}) ---")
                 if item_type in GOOGLE_MIME_TYPES:
-                    export_drive_file(item_id, service)
-                results.append(item_info)
-
+                    file_path = export_drive_file(item_id, service)
+                    item["file_path"] = file_path
+                    results.append(item)
         page_token = response.get("nextPageToken")
         if not page_token:
             break
@@ -98,9 +98,8 @@ def list_folder_contents(service, folder_id):
 
 
 def export_drive_folder(folder_id: str):
-    target_folder_id = "17KzRpzFrZMEO-bHzOV3-4sl99UyviOnx"
     drive_service = get_drive_service()
-    list_folder_contents(drive_service, target_folder_id)
+    return list_folder_contents(drive_service, folder_id)
 
 
 if __name__ == "__main__":
