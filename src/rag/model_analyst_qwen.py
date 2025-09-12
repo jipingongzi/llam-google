@@ -23,11 +23,17 @@ def analyze_image(url_or_path, file_name) -> str:
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are a helpful AI assistant"},
+            {"role": "system", "content": "You are a software architect"},
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Describe this image of file <" + file_name + ">"},
+                    {"type": "text",
+                     "text": "Describe this image of file <" + file_name + ">, "
+                             "please focus on describing the content of the drawing section, "
+                             "which mainly includes software development related flowcharts, mind maps, "
+                             "system architecture diagrams, deployment diagrams, sequence diagrams, etc. "
+                             "Please provide a detailed description of the overall architecture and details."
+                     },
                     {
                         "type": "image_url",
                         "image_url": {

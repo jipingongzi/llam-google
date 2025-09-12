@@ -32,7 +32,7 @@ def start():
             image_dto = pdf_image_dto(file_id=file_id, page_number=extract_page_number(img_path))
             print(f"start analysis image:{img_path}")
             image_dto.analysis_result = analyze_image(img_path, file_name)
-            print(f"image analysis:{image_dto}")
+            # print(f"image analysis:{image_dto}")
             image_dtos.append(image_dto)
         print("start vectorize")
         query_engine = vector(file_id, file_path, file_name, image_dtos)

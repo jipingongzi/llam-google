@@ -21,15 +21,13 @@ def init_app():
 
     # 加载文档函数 - 使用session_state而非cache_resource，更灵活
     def load_document():
-        if st.session_state.query_engine is None:
-            with st.spinner("正在加载文档并构建向量数据库..."):
-                try:
-                    st.session_state.query_engine = start()
-                    st.success("✅ 向量数据库构建完成，可以开始提问了")
-                except Exception as e:
-                    st.error(f"❌ 加载文档失败: {str(e)}")
-                    return None
-        return st.session_state.query_engine
+        with st.spinner("正在加载文档并构建向量数据库..."):
+            try:
+                st.session_state.query_engine = start()
+                st.success("✅ 向量数据库构建完成，可以开始提问了")
+            except Exception as e:
+                st.error(f"❌ 加载文档失败: {str(e)}")
+                return None
 
     # 加载文档按钮 - 让用户主动触发加载
     if st.button("加载文档", key="load_doc_btn"):
@@ -82,28 +80,6 @@ def init_app():
                 st.rerun()
             except Exception as e:
                 st.error(f"生成答案时出错: {str(e)}")
-
-    # 示例问题
-    st.subheader("🔍 示例问题")
-    example_questions = [
-        "What is BMS?",
-        "What is BMS problem now?",
-        "How to fix BMS problem now?"
-    ]
-
-    cols = st.columns(len(example_questions))
-    for i, q in enumerate(example_questions):
-        with cols[i]:
-            if st.button(q, key=f"example_{i}"):
-                with st.spinner(f"正在查找「{q}」的答案..."):
-                    try:
-                        full_answer = ""
-                        for chunk in query(q, st.session_state.query_engine):
-                            full_answer += chunk
-                        st.session_state.chat_history.append((q, full_answer))
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"生成答案时出错: {str(e)}")
 
 if __name__ == "__main__":
     init_app()

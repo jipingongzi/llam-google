@@ -23,11 +23,12 @@ Settings.embed_model = HuggingFaceEmbedding(
 
 
 def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
+    print("1111111111111")
     persist_dir = "persist_dir"
     pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     enhanced_pdf_docs = []
     for doc in pdf_documents:
-        page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "未知")
+        page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "unknown")
         doc.metadata.update({
             "file_id": file_id,
             "file_name": file_name,
@@ -53,16 +54,20 @@ def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dt
             )
             dto_documents.append(doc)
     all_documents = enhanced_pdf_docs + dto_documents
-
     if os.path.exists(persist_dir) and os.path.isdir(persist_dir):
         storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
         index = load_index_from_storage(storage_context)
+        for ref_doc_id, ref_doc_info in index.ref_doc_info.items():
+            print(ref_doc_id)
+            print(ref_doc_info.to_json())
+            if ref_doc_info.metadata.get("file_id") == file_id:
+                print("delete doc:" + ref_doc_info.to_json())
+                index.delete_ref_doc(ref_doc_id, delete_from_docstore=True)
         index.insert_nodes(all_documents)
-        return index.as_query_engine(similarity_top_key=5, streaming=True)
-
+        return index.as_query_engine(similarity_top_k=5, streaming=True)
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
-    return vector_index.as_query_engine(similarity_top_key=5, streaming=True)
+    return vector_index.as_query_engine(similarity_top_k=5, streaming=True)
 
 
 def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, None]:
@@ -70,6 +75,15 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
     print(f"Q: {question}")
     answer = query_engine.query(question)
     # answer.print_response_stream()
+    print("\n\nsource：")
+    for i, node in enumerate(answer.source_nodes, 1):
+        print(
+            f"{i}. file id: {node.node.metadata.get('file_id', 'unknown')}, "
+            f"file name: {node.node.metadata.get('file_name', 'unknown')}, "
+            f"PDF page: {node.node.metadata.get('page_number', 'unknown')}, "
+            f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
+            f"score: {node.score:.4f}"
+        )
     full_answer = []
     for token in answer.response_gen:
         full_answer.append(token)
@@ -81,7 +95,7 @@ def query_print(question: str, query_engine: BaseQueryEngine):
     print(f"Q: {question}")
     answer = query_engine.query(question)
     answer.print_response_stream()
-    print("\n\n信息来源：")
+    print("\n\nsource：")
     for i, node in enumerate(answer.source_nodes, 1):
         print(
             f"{i}. file id: {node.node.metadata.get('file_id', 'unknown')}, "

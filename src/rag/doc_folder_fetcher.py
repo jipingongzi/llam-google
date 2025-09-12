@@ -16,6 +16,7 @@ GOOGLE_MIME_TYPES = {
     "application/vnd.google-apps.drawing": "application/pdf"
 }
 
+file_cache_map = {}
 
 def get_drive_service():
     creds_path = Path.home() / ".credentials" / "credentials.json"
@@ -55,7 +56,7 @@ def list_folder_contents(service, folder_id) -> []:
     results = []
     folder_info = get_detailed_file_info(service, folder_id)
     logger.info(f"\n===== folder: {folder_info.get('name')} (ID: {folder_id}) =====")
-    print(f"{json.dumps(folder_info, indent=2, ensure_ascii=False)}")
+    # print(f"{json.dumps(folder_info, indent=2, ensure_ascii=False)}")
 
     page_token = None
     total_items = 0
@@ -77,9 +78,9 @@ def list_folder_contents(service, folder_id) -> []:
             item_id = item["id"]
             item_name = item["name"]
             item_type = item["mimeType"]
-
             item_info = get_detailed_file_info(service, item_id)
-            print(f"{json.dumps(item_info, indent=2, ensure_ascii=False)}")
+            item_version = item_info["version"]
+            # print(f"{json.dumps(item_info, indent=2, ensure_ascii=False)}")
 
             if item_type == "application/vnd.google-apps.folder":
                 logger.info(f"\n--- sub-folder: {item_name} (ID: {item_id}) ---")
@@ -88,6 +89,12 @@ def list_folder_contents(service, folder_id) -> []:
             else:
                 logger.info(f"\n export: --- file: {item_name} (ID: {item_id}) ---")
                 if item_type in GOOGLE_MIME_TYPES:
+                    if item_id in file_cache_map:
+                        cache_version = file_cache_map.get(item_id)
+                        if cache_version >= item_version:
+                            logger.info(f"file: {item_name} (ID: {item_id}) has not update, ignore sync")
+                            continue
+                    file_cache_map[item_id] = item_version
                     file_path = export_drive_file(item_id, service)
                     item["file_path"] = file_path
                     results.append(item)
