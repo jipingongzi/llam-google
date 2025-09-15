@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote
 from uuid import uuid1
 from typing import List
 from typing import Generator
@@ -101,7 +102,7 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
             f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
             f"score: {node.score:.4f}"
         )
-        sources.append(f"[{file_name}]({file_link}) - page {page_number}")
+        sources.append(f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}')
 
     if sources:
         yield "\n\nReference:"

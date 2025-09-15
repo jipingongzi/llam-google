@@ -15,6 +15,7 @@
                         secondary: '#f3f4f6',
                         user: '#e3f2fd',
                         ai: '#f5f5f5',
+                        reference: '#374151' // Reference 后文字的深灰色
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -42,288 +43,344 @@
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
+            /* 解决文字溢出：自动换行 + 单词截断 */
+            .text-wrap-break {
+                white-space: pre-wrap; /* 保留换行符，同时自动换行 */
+                word-break: break-word; /* 长单词/URL 强制截断，避免溢出 */
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <div class="flex flex-col h-screen max-h-screen">
-        <!-- 头部 -->
-        <header class="bg-primary text-white p-4 shadow-md">
-            <div class="container mx-auto flex justify-between items-center">
-                <h1 class="text-2xl font-bold">BMS 问答系统</h1>
-                <div id="status-indicator" class="flex items-center">
-                    <span id="status-text">初始化中...</span>
-                    <div id="status-spinner" class="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
+<div class="flex flex-col h-screen max-h-screen">
+    <!-- 头部 -->
+    <header class="bg-primary text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">BMS 问答系统</h1>
+            <div id="status-indicator" class="flex items-center">
+                <span id="status-text">初始化中...</span>
+                <div id="status-spinner"
+                     class="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- 聊天区域 -->
-        <main class="flex-1 overflow-y-auto p-4 bg-gray-50 scrollbar-hide" id="chat-container">
-            <div class="container mx-auto max-w-3xl space-y-6">
-                <!-- 系统消息 -->
-                <div class="message-appear">
-                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-primary text-white rounded-full p-2 mr-3">
-                                <i class="fa fa-info"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-800">欢迎使用 BMS 问答系统，请等待系统初始化完成后提问。</p>
-                            </div>
+    <!-- 聊天区域 -->
+    <main class="flex-1 overflow-y-auto p-4 bg-gray-50 scrollbar-hide" id="chat-container">
+        <div class="container mx-auto max-w-3xl space-y-6">
+            <!-- 系统消息 -->
+            <div class="message-appear">
+                <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-primary text-white rounded-full p-2 mr-3">
+                            <i class="fa fa-info"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-800">欢迎使用 BMS 问答系统，请等待系统初始化完成后提问。</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <!-- 输入区域 -->
-        <footer class="bg-white border-t border-gray-200 p-4">
-            <div class="container mx-auto max-w-3xl">
-                <form id="question-form" class="flex flex-col space-y-2">
-                    <div class="relative">
+    <!-- 输入区域 -->
+    <footer class="bg-white border-t border-gray-200 p-4">
+        <div class="container mx-auto max-w-3xl">
+            <form id="question-form" class="flex flex-col space-y-2">
+                <div class="relative">
                         <textarea
-                            id="question-input"
-                            placeholder="请输入您的问题..."
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none"
-                            rows="3"
-                            disabled
+                                id="question-input"
+                                placeholder="请输入您的问题..."
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none text-wrap-break"
+                                rows="3"
+                                disabled
                         ></textarea>
-                    </div>
-                    <div class="flex justify-end">
-                        <button
+                </div>
+                <div class="flex justify-end">
+                    <button
                             type="submit"
                             id="submit-btn"
                             class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
                             disabled
-                        >
-                            <span>发送</span>
-                            <i class="fa fa-paper-plane ml-2"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </footer>
-    </div>
+                    >
+                        <span>发送</span>
+                        <i class="fa fa-paper-plane ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </footer>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatContainer = document.getElementById('chat-container');
-            const questionForm = document.getElementById('question-form');
-            const questionInput = document.getElementById('question-input');
-            const submitBtn = document.getElementById('submit-btn');
-            const statusText = document.getElementById('status-text');
-            const statusSpinner = document.getElementById('status-spinner');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chat-container');
+        const questionForm = document.getElementById('question-form');
+        const questionInput = document.getElementById('question-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusText = document.getElementById('status-text');
+        const statusSpinner = document.getElementById('status-spinner');
 
-            // 检查系统初始化状态
-            function checkInitialization() {
-                fetch('/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.initialized) {
-                            statusSpinner.classList.remove('animate-spin');
-                            if (data.error) {
-                                statusText.textContent = '初始化失败';
-                                addSystemMessage(`系统初始化失败: ${data.error}`, 'error');
-                            } else {
-                                statusText.textContent = '已就绪';
-                                questionInput.disabled = false;
-                                submitBtn.disabled = false;
-                                addSystemMessage('系统已准备就绪，您可以开始提问了。', 'success');
-                            }
+        // 1. HTML 特殊字符转义（解决 <> 显示问题）
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 2. 检查系统初始化状态
+        function checkInitialization() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.initialized) {
+                        statusSpinner.classList.remove('animate-spin');
+                        if (data.error) {
+                            statusText.textContent = '初始化失败';
+                            addSystemMessage(`系统初始化失败: ${data.error}`, 'error');
                         } else {
-                            // 未初始化完成，继续检查
-                            setTimeout(checkInitialization, 1000);
+                            statusText.textContent = '已就绪';
+                            questionInput.disabled = false;
+                            submitBtn.disabled = false;
+                            addSystemMessage('系统已准备就绪，您可以开始提问了。', 'success');
                         }
-                    })
-                    .catch(error => {
-                        console.error('检查初始化状态失败:', error);
-                        setTimeout(checkInitialization, 2000);
-                    });
-            }
+                    } else {
+                        setTimeout(checkInitialization, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('检查初始化状态失败:', error);
+                    setTimeout(checkInitialization, 2000);
+                });
+        }
 
-            // 添加系统消息
-            function addSystemMessage(text, type = 'info') {
-                const messageClass = type === 'error' ? 'bg-red-50' :
-                                   type === 'success' ? 'bg-green-50' : 'bg-blue-50';
-                const iconClass = type === 'error' ? 'fa-exclamation-circle text-red-500' :
-                                 type === 'success' ? 'fa-check-circle text-green-500' : 'fa-info-circle text-blue-500';
+        // 3. 添加系统消息
+        function addSystemMessage(text, type = 'info') {
+            const messageClass = type === 'error' ? 'bg-red-50' :
+                               type === 'success' ? 'bg-green-50' : 'bg-blue-50';
+            const iconClass = type === 'error' ? 'fa-exclamation-circle text-red-500' :
+                             type === 'success' ? 'fa-check-circle text-green-500' : 'fa-info-circle text-blue-500';
 
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-appear';
-                messageDiv.innerHTML = `
-                    <div class="${messageClass} p-4 rounded-lg shadow-sm">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 rounded-full p-2 mr-3">
-                                <i class="fa ${iconClass}"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-800">${text}</p>
-                            </div>
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-appear';
+            messageDiv.innerHTML = `
+                <div class="${messageClass} p-4 rounded-lg shadow-sm">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 rounded-full p-2 mr-3">
+                            <i class="fa ${iconClass}"></i>
+                        </div>
+                        <div class="text-wrap-break">
+                            <p class="text-gray-800">${escapeHtml(text)}</p>
                         </div>
                     </div>
-                `;
-                chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
-                scrollToBottom();
-            }
+                </div>
+            `;
+            chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
+            scrollToBottom();
+        }
 
-            // 添加用户消息
-            function addUserMessage(text) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-appear';
-                messageDiv.innerHTML = `
-                    <div class="bg-user p-4 rounded-lg shadow-sm ml-auto max-w-[85%]">
-                        <div class="flex items-start">
-                            <div class="flex-1">
-                                <p class="text-gray-800">${text}</p>
-                            </div>
-                            <div class="flex-shrink-0 bg-blue-500 text-white rounded-full p-2 ml-3">
-                                <i class="fa fa-user"></i>
-                            </div>
+        // 4. 添加用户消息
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-appear';
+            messageDiv.innerHTML = `
+                <div class="bg-user p-4 rounded-lg shadow-sm ml-auto max-w-[85%]">
+                    <div class="flex items-start">
+                        <div class="flex-1 text-wrap-break">
+                            <p class="text-gray-800">${escapeHtml(text)}</p>
+                        </div>
+                        <div class="flex-shrink-0 bg-blue-500 text-white rounded-full p-2 ml-3">
+                            <i class="fa fa-user"></i>
                         </div>
                     </div>
-                `;
-                chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
-                scrollToBottom();
-                return messageDiv;
-            }
+                </div>
+            `;
+            chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
+            scrollToBottom();
+            return messageDiv;
+        }
 
-            // 添加AI消息容器并返回用于更新的元素
-            function addAiMessageContainer() {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-appear';
-                messageDiv.innerHTML = `
-                    <div class="bg-ai p-4 rounded-lg shadow-sm mr-auto max-w-[85%]">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-gray-400 text-white rounded-full p-2 mr-3">
-                                <i class="fa fa-robot"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="ai-response"></div>
-                                <div class="loading-indicator hidden mt-2">
-                                    <div class="flex space-x-1">
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                                    </div>
+        // 5. 添加AI消息容器（返回用于更新的元素）
+        function addAiMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-appear';
+            messageDiv.innerHTML = `
+                <div class="bg-ai p-4 rounded-lg shadow-sm mr-auto max-w-[85%]">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-gray-400 text-white rounded-full p-2 mr-3">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                        <div class="flex-1">
+                            <!-- AI 响应内容（添加 text-wrap-break 解决溢出） -->
+                            <div class="ai-response text-wrap-break"></div>
+                            <!-- 加载动画 -->
+                            <div class="loading-indicator hidden mt-2">
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                `;
-                chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
-                scrollToBottom();
+                </div>
+            `;
+            chatContainer.querySelector('.space-y-6').appendChild(messageDiv);
+            scrollToBottom();
 
-                return {
-                    container: messageDiv,
-                    responseElement: messageDiv.querySelector('.ai-response'),
-                    loadingIndicator: messageDiv.querySelector('.loading-indicator')
-                };
-            }
+            return {
+                container: messageDiv,
+                responseElement: messageDiv.querySelector('.ai-response'),
+                loadingIndicator: messageDiv.querySelector('.loading-indicator')
+            };
+        }
 
-            // 滚动到底部
-            function scrollToBottom() {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
+        // 6. 滚动到底部
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
-            // 处理表单提交
-            questionForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const question = questionInput.value.trim();
+        // 7. 处理 AI 响应（核心：检测 Reference 并改色）
+        function handleAiResponseChunk(aiResponseElement, newToken) {
+            const currentHtml = aiResponseElement.innerHTML;
+const hasReference = currentHtml.toLowerCase().includes('reference');
 
-                if (!question) return;
+if (hasReference) {
+    // Reference之后的内容：不转义，保留HTML标签（如链接）
+    aiResponseElement.innerHTML = currentHtml + `<span class="text-reference">${newToken}</span>`;
+} else {
+    // Reference之前的内容：仍需要转义特殊字符
+    const escapedToken = escapeHtml(newToken);
+    aiResponseElement.innerHTML = currentHtml + escapedToken;
+}
+        }
 
-                // 清空输入框
-                questionInput.value = '';
+        // 8. 处理表单提交
+        questionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const question = questionInput.value.trim();
 
-                // 添加用户消息
-                addUserMessage(question);
+            if (!question) return;
 
-                // 添加AI消息容器
-                const aiMessage = addAiMessageContainer();
-                aiMessage.loadingIndicator.classList.remove('hidden');
+            // 清空输入框并重置高度
+            questionInput.value = '';
+            questionInput.style.height = 'auto';
 
-                // 发送请求
-                fetch('/query', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ question: question })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('请求失败');
-                    }
+            // 添加用户消息
+            addUserMessage(question);
 
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let aiResponse = '';
+            // 添加AI消息容器
+            const aiMessage = addAiMessageContainer();
+            aiMessage.loadingIndicator.classList.remove('hidden');
 
-                    function read() {
-                        reader.read().then(({ done, value }) => {
-                            if (done) {
-                                aiMessage.loadingIndicator.classList.add('hidden');
-                                return;
-                            }
+            // 发送请求
+            fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
 
-                            const chunk = decoder.decode(value, { stream: true });
-                            const lines = chunk.split('\n');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
 
-                            lines.forEach(line => {
-                                if (line.startsWith('data:')) {
-                                    try {
-                                        const data = JSON.parse(line.substring(5).trim());
-                                        if (data.token) {
-                                            aiResponse += data.token;
-                                            aiMessage.responseElement.innerHTML = aiResponse.replace(/\n/g, '<br>');
-                                            scrollToBottom();
-                                        }
-                                    } catch (e) {
-                                        console.error('解析响应失败:', e);
-                                    }
-                                } else if (line.startsWith('event: error')) {
-                                    try {
-                                        const dataLine = lines[lines.indexOf(line) + 1];
-                                        if (dataLine && dataLine.startsWith('data:')) {
-                                            const data = JSON.parse(dataLine.substring(5).trim());
-                                            aiMessage.responseElement.innerHTML = `<span class="text-red-500">错误: ${data.message}</span>`;
-                                        }
-                                    } catch (e) {
-                                        console.error('解析错误响应失败:', e);
-                                    }
-                                    aiMessage.loadingIndicator.classList.add('hidden');
-                                } else if (line.startsWith('event: complete')) {
-                                    aiMessage.loadingIndicator.classList.add('hidden');
-                                }
-                            });
-
-                            read();
-                        }).catch(error => {
-                            console.error('读取响应失败:', error);
-                            aiMessage.responseElement.innerHTML = `<span class="text-red-500">获取答案时出错</span>`;
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
                             aiMessage.loadingIndicator.classList.add('hidden');
+                            return;
+                        }
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+
+                        lines.forEach(line => {
+                            const trimmedLine = line.trim();
+                            if (!trimmedLine) return;
+
+                            if (trimmedLine.startsWith('data:')) {
+                                try {
+                                    const jsonStr = line.substring(line.indexOf('data:') + 5).trim();
+                                    const data = JSON.parse(jsonStr);
+
+                                    if (data.token) {
+                                        // 处理 AI 响应片段（检测 Reference 并改色）
+                                        handleAiResponseChunk(aiMessage.responseElement, data.token);
+                                        scrollToBottom();
+                                    } else if (data.event === 'complete') {
+                                        aiMessage.loadingIndicator.classList.add('hidden');
+                                    }
+                                } catch (e) {
+                                    console.error('解析响应失败:', e, '行内容:', trimmedLine);
+                                    if (!aiMessage.responseElement.innerHTML.includes('解析异常')) {
+                                        aiMessage.responseElement.innerHTML += `<br><span class="text-orange-500 text-sm">⚠️ 部分内容解析异常</span>`;
+                                    }
+                                }
+                            } else if (trimmedLine.startsWith('event: error')) {
+                                try {
+                                    const dataLine = lines[lines.indexOf(line) + 1];
+                                    if (dataLine && dataLine.startsWith('data:')) {
+                                        const data = JSON.parse(dataLine.substring(5).trim());
+                                        aiMessage.responseElement.innerHTML = `<span class="text-red-500">错误: ${escapeHtml(data.message)}</span>`;
+                                    }
+                                } catch (e) {
+                                    console.error('解析错误响应失败:', e);
+                                    aiMessage.responseElement.innerHTML = `<span class="text-red-500">错误: 未知错误</span>`;
+                                }
+                                aiMessage.loadingIndicator.classList.add('hidden');
+                            }
                         });
-                    }
 
-                    read();
-                })
-                .catch(error => {
-                    console.error('发送请求失败:', error);
-                    aiMessage.responseElement.innerHTML = `<span class="text-red-500">发送请求时出错</span>`;
-                    aiMessage.loadingIndicator.classList.add('hidden');
-                });
-            });
+                        read();
+                    }).catch(error => {
+                        console.error('读取响应失败:', error);
+                        aiMessage.responseElement.innerHTML = `<span class="text-red-500">获取答案时出错，请重试</span>`;
+                        aiMessage.loadingIndicator.classList.add('hidden');
+                    });
+                }
 
-            // 初始化检查
-            checkInitialization();
-
-            // 调整textarea高度
-            questionInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight > 100 ? 100 : this.scrollHeight) + 'px';
+                read();
+            })
+            .catch(error => {
+                console.error('发送请求失败:', error);
+                aiMessage.responseElement.innerHTML = `<span class="text-red-500">发送请求时出错，请重试</span>`;
+                aiMessage.loadingIndicator.classList.add('hidden');
             });
         });
-    </script>
+
+        // 9. 回车键触发发送（核心：监听 Enter 键，Shift+Enter 换行）
+        questionInput.addEventListener('keydown', function(e) {
+            // Shift+Enter：换行（不触发发送）
+            if (e.key === 'Enter' && e.shiftKey) {
+                return; // 保留默认换行行为
+            }
+            // 单独 Enter 键：触发表单提交
+            else if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // 阻止默认换行
+                if (!questionInput.disabled && questionInput.value.trim()) {
+                    questionForm.dispatchEvent(new Event('submit')); // 触发提交
+                }
+            }
+        });
+
+        // 10. 调整 textarea 高度（随输入内容自适应）
+        questionInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            // 限制最大高度为 100px，避免输入框过高
+            this.style.height = (this.scrollHeight > 100 ? 100 : this.scrollHeight) + 'px';
+        });
+
+        // 初始化检查
+        checkInitialization();
+    });
+</script>
 </body>
 </html>
