@@ -23,7 +23,6 @@ Settings.embed_model = HuggingFaceEmbedding(
 
 
 def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
-    print("1111111111111")
     persist_dir = "persist_dir"
     pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     enhanced_pdf_docs = []

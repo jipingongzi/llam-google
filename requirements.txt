@@ -15,3 +15,5 @@ llama-index-llms-deepseek
 streamlit
 
 comtypes
+
+flask
