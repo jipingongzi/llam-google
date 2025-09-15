@@ -92,6 +92,14 @@ def query():
 
     return Response(generate(), mimetype='text/event-stream')
 
+import os
+project_root = os.path.dirname(app.root_path)
+app.config['PIC_FOLDER'] = os.path.join(project_root, 'doc', 'pic')
+@app.route('/pic/<filename>')
+def get_pic(filename):
+    print(app.config['PIC_FOLDER'])
+    from flask import send_from_directory
+    return send_from_directory(app.config['PIC_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)

@@ -15,6 +15,13 @@ def extract_page_number(image_path: str) -> int:
         return None
 
 
+def get_filename(file_path, with_extension=True):
+    import os
+    file_name = os.path.basename(file_path)
+    if not with_extension:
+        file_name = os.path.splitext(file_name)[0]
+    return file_name
+
 def start():
     folder_id = "17KzRpzFrZMEO-bHzOV3-4sl99UyviOnx"
     items = export_drive_folder(folder_id=folder_id)
@@ -28,8 +35,10 @@ def start():
         image_dtos = []
         print(image_paths)
         for img_path in image_paths:
+            print(img_path)
             extract_page_number(img_path)
             image_dto = pdf_image_dto(file_id=file_id, page_number=extract_page_number(img_path))
+            image_dto.image_path = get_filename(img_path)
             print(f"start analysis image:{img_path}")
             image_dto.analysis_result = analyze_image(img_path, file_name)
             # print(f"image analysis:{image_dto}")

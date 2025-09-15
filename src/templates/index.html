@@ -57,6 +57,16 @@
                 transform: translateX(4px);
             }
         }
+
+        .pdf-preview-img:hover {
+            border-color: #3b82f6;  /*  hover时边框变主题色 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);  /* 轻微阴影增强层次感 */
+            transition: all 0.2s ease;
+        }
+
+        #imageModal {
+            backdrop-filter: blur(4px);  /* 背景模糊增强视觉效果 */
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -428,6 +438,34 @@
         // 初始化检查
         checkInitialization();
     });
+
+
+    // 显示图片放大弹窗
+function showImageModal(imgElem) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    // 设置弹窗图片为原图
+    modalImg.src = imgElem.getAttribute('data-full-src');
+    // 显示弹窗
+    modal.classList.remove('hidden');
+    // 禁止页面滚动
+    document.body.style.overflow = 'hidden';
+}
+
+// 关闭图片放大弹窗
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.add('hidden');
+    // 恢复页面滚动
+    document.body.style.overflow = '';
+}
+
+// 点击弹窗背景也可关闭
+document.getElementById('imageModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
 </script>
 </body>
 </html>

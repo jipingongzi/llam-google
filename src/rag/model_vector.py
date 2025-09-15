@@ -45,7 +45,8 @@ def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dt
                 "file_name": file_name,
                 "page_number": dto.page_number,
                 "source_type": "pdf_image",
-                "pdf_source_path": file_path
+                "pdf_source_path": file_path,
+                "image_path": dto.image_path
             }
             doc = Document(
                 text=dto.analysis_result.strip(),
@@ -94,6 +95,7 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
     for i, node in enumerate(answer.source_nodes, 1):
         file_id = node.node.metadata.get('file_id', 'unknown')
         file_name = node.node.metadata.get('file_name', 'unknown')
+        source_type = node.node.metadata.get('source_type', 'unknown')
         page_number = node.node.metadata.get('page_number', 'unknown')
         file_link = f"https://docs.google.com/document/d/{file_id}/view"
         print(
@@ -105,8 +107,41 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
         )
         unique_key = f"{file_id}_{str(page_number)}"
         if unique_key not in added_items:
-            sources.append(
-                f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}')
+            ref = f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}'
+            if "pdf_image" == source_type:
+                image_path = "http://localhost:5000/pic/" + node.node.metadata.get('image_path', 'unknown')
+                print(image_path)
+                image_html = f'''
+                            <span class="ml-2 inline-block">
+                                <img 
+                                    src="{image_path}" 
+                                    alt="Preview of {file_name} page {page_number}"
+                                    class="pdf-preview-img cursor-zoom-in border border-gray-200 rounded-md"
+                                    data-full-src="{image_path}"
+                                    onclick="showImageModal(this)"
+                                    style="max-width: 80px; max-height: 120px; object-fit: contain;"
+                                >
+                            </span>
+                            <div id="imageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+                                <button 
+                                    onclick="closeImageModal()" 
+                                    class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+                                >
+                                    &times;
+                                </button>
+                                <img 
+                                    id="modalImage" 
+                                    src="" 
+                                    alt="Enlarged preview"
+                                    class="max-w-[90vw] max-h-[90vh] object-contain"
+                                >
+                            </div>
+                        '''
+                # 将图片HTML追加到ref后
+                ref += image_html
+
+
+            sources.append(ref)
             added_items.add(unique_key)
 
     if sources:
