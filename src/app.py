@@ -80,10 +80,9 @@ def query():
         try:
             # 调用rag的query方法获取生成器
             for token in rag_query(question, query_engine):
-                # 先处理引号转义
-                escaped_token = token.replace('"', '\\"')
-                # 再使用处理后的字符串
-                yield f'data: {{"token": "{escaped_token}"}}\n\n'
+                import json
+                json_data = json.dumps({"token": token})
+                yield f'data: {json_data}\n\n'
                 # 短暂延迟，避免响应太快
                 time.sleep(0.01)
             # 发送完成事件

@@ -87,6 +87,28 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
     for token in answer.response_gen:
         full_answer.append(token)
         yield token
+    sources = []
+    print("\n\nsource：")
+    for i, node in enumerate(answer.source_nodes, 1):
+        file_id = node.node.metadata.get('file_id', 'unknown')
+        file_name = node.node.metadata.get('file_name', 'unknown')
+        page_number = node.node.metadata.get('page_number', 'unknown')
+        file_link = f"https://docs.google.com/document/d/{file_id}/view"
+        print(
+            f"{i}. file id: {node.node.metadata.get('file_id', 'unknown')}, "
+            f"file name: {file_name}, "
+            f"PDF page: {page_number}, "
+            f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
+            f"score: {node.score:.4f}"
+        )
+        sources.append(f"[{file_name}]({file_link}) - page {page_number}")
+
+    if sources:
+        yield "\n\nReference:"
+        for source in sources:
+            yield f"\n- {source}"
+
+    return
 
 
 def query_print(question: str, query_engine: BaseQueryEngine):
