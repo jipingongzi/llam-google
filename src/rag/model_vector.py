@@ -89,6 +89,7 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
         full_answer.append(token)
         yield token
     sources = []
+    added_items = set()
     print("\n\nsource：")
     for i, node in enumerate(answer.source_nodes, 1):
         file_id = node.node.metadata.get('file_id', 'unknown')
@@ -102,7 +103,11 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
             f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
             f"score: {node.score:.4f}"
         )
-        sources.append(f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}')
+        unique_key = f"{file_id}_{str(page_number)}"
+        if unique_key not in added_items:
+            sources.append(
+                f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}')
+            added_items.add(unique_key)
 
     if sources:
         yield "\n\nReference:"
