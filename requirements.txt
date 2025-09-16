@@ -11,6 +11,8 @@ google-api-python-client
 llama-index
 llama-index-embeddings-huggingface
 llama-index-llms-deepseek
+llama-index-readers-file
+llama-index-readers-pdf-table
 
 streamlit
 

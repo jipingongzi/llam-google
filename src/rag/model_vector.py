@@ -9,6 +9,9 @@ from dto.pdf_image_dto import pdf_image_dto
 from llama_index.core import Settings
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.readers.file import PDFReader
+from llama_index.readers.pdf_table import PDFTableReader
+from pathlib import Path
 
 # import logging
 # import sys
@@ -25,8 +28,17 @@ Settings.embed_model = HuggingFaceEmbedding(
 
 def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
     print("vector:" + file_name)
+
+    os.environ["PATH"] += os.pathsep + r"C:\Program Files\gs\gs10.06.0\bin"
+    text_reader = PDFReader()
+    text_docs = text_reader.load_data(file=Path(file_path))
+
+    table_reader = PDFTableReader()
+    table_docs = table_reader.load_data(file=Path(file_path), pages="all")
+    pdf_documents = text_docs + table_docs
+
     persist_dir = "persist_dir"
-    pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
+    # pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     enhanced_pdf_docs = []
     for doc in pdf_documents:
         page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "unknown")
