@@ -25,9 +25,10 @@ def get_filename(file_path, with_extension=True):
 def start():
     folder_id = "17KzRpzFrZMEO-bHzOV3-4sl99UyviOnx"
     items = export_drive_folder(folder_id=folder_id)
-    print(items)
     query_engine = None
     for item in items:
+        print("process---------------------------------")
+        print(item)
         file_id = item["id"]
         file_path = item["file_path"]
         file_name = item["name"]
@@ -45,6 +46,7 @@ def start():
             image_dtos.append(image_dto)
         print("start vectorize")
         query_engine = vector(file_id, file_path, file_name, image_dtos)
+        print("-------------------------------------------------------------")
     return query_engine
 
 

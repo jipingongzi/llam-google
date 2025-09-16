@@ -54,10 +54,6 @@ def get_detailed_file_info(service, file_id):
 
 def list_folder_contents(service, folder_id) -> []:
     results = []
-    folder_info = get_detailed_file_info(service, folder_id)
-    logger.info(f"\n===== folder: {folder_info.get('name')} (ID: {folder_id}) =====")
-    # print(f"{json.dumps(folder_info, indent=2, ensure_ascii=False)}")
-
     page_token = None
     total_items = 0
     while True:
@@ -83,16 +79,16 @@ def list_folder_contents(service, folder_id) -> []:
             # print(f"{json.dumps(item_info, indent=2, ensure_ascii=False)}")
 
             if item_type == "application/vnd.google-apps.folder":
-                logger.info(f"\n--- sub-folder: {item_name} (ID: {item_id}) ---")
+                # logger.info(f"\n--- sub-folder: {item_name} (ID: {item_id}) ---")
                 sub_results = list_folder_contents(service, item_id)
                 results.extend(sub_results)
             else:
-                logger.info(f"\n export: --- file: {item_name} (ID: {item_id}) ---")
+                # logger.info(f"\n export: --- file: {item_name} (ID: {item_id}) ---")
                 if item_type in GOOGLE_MIME_TYPES:
                     if item_id in file_cache_map:
                         cache_version = file_cache_map.get(item_id)
                         if cache_version >= item_version:
-                            logger.info(f"file: {item_name} (ID: {item_id}) has not update, ignore sync")
+                            # logger.info(f"file: {item_name} (ID: {item_id}) has not update, ignore sync")
                             continue
                     file_cache_map[item_id] = item_version
                     file_path = export_drive_file(item_id, service)

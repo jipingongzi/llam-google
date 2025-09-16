@@ -24,11 +24,13 @@ Settings.embed_model = HuggingFaceEmbedding(
 
 
 def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
+    print("vector:" + file_name)
     persist_dir = "persist_dir"
     pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     enhanced_pdf_docs = []
     for doc in pdf_documents:
         page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "unknown")
+        doc.id_ = str(uuid1())
         doc.metadata.update({
             "file_id": file_id,
             "file_name": file_name,
@@ -59,13 +61,15 @@ def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dt
         storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
         index = load_index_from_storage(storage_context)
         for ref_doc_id, ref_doc_info in index.ref_doc_info.items():
-            print(ref_doc_id)
-            print(ref_doc_info.to_json())
             if ref_doc_info.metadata.get("file_id") == file_id:
-                print("delete doc:" + ref_doc_info.to_json())
+                print("delete file:" + file_name)
+                print("delete ref doc:" + ref_doc_info.to_json())
                 index.delete_ref_doc(ref_doc_id, delete_from_docstore=True)
+        print("inser file:" + file_name)
         index.insert_nodes(all_documents)
+        index.storage_context.persist(persist_dir)
         return index.as_query_engine(similarity_top_k=5, streaming=True)
+    print("init store dir")
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
     return vector_index.as_query_engine(similarity_top_k=5, streaming=True)
