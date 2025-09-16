@@ -75,6 +75,13 @@
         #imageModal {
             backdrop-filter: blur(4px);
         }
+
+        #llm-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -115,11 +122,45 @@
         <header class="bg-primary text-white p-4 shadow-md">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold">Google Doc Chat</h1>
-                <div id="status-indicator" class="flex items-center">
-                    <span id="status-text">init...</span>
-                    <div id="status-spinner"
-                         class="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
+               <div class="flex items-center gap-6">
+    <div class="relative">
+        <label for="llm-select" class="text-sm font-medium mr-2">LLM Model:</label>
+        <select id="llm-select" class="bg-primary/80 border border-white/30 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none pr-8">
+            <option value="gpt-4.1-20250414" selected>Default LLM Model: GPT-4.1 2025-04-14</option>
+            <option value="gpt-4o-20240806">GPT-4o 2024-08-06</option>
+            <option value="gpt-4o-20241120">GPT-4o 2024-11-20</option>
+            <option value="gpt-4o-mini-20240718">GPT-4o mini-2024-07-18</option>
+            <option value="gpt-4.1-20250414-2">GPT-4.1 2025-04-14</option>
+            <option value="gpt-4.1-mini-20250414">GPT-4.1 mini 2025-04-14</option>
+            <option value="gpt-5-20250807">GPT-5 2025-08-07</option>
+            <option value="gpt-5-mini-20250807">GPT-5 Mini 2025-08-07</option>
+            <option value="gpt-5-nano-20250807">GPT-5 Nano 2025-08-07</option>
+            <option value="o3-mini-20250131">o3 Mini 2025-01-31</option>
+            <option value="o1-20241217">o1 2024-12-17</option>
+            <option value="o3-20250416">o3 2025-04-16</option>
+            <option value="o4-mini-20250416">o4-mini 2025-04-16</option>
+            <option value="bedrock-claude-3.5-sonnet">Bedrock Claude 3.5 Sonnet</option>
+            <option value="bedrock-claude-3.5-sonnet-v2-20241022">Bedrock Claude 3.5 Sonnet v2 20241022</option>
+            <option value="bedrock-claude-3.7-sonnet-v1">Bedrock Claude 3.7 Sonnet v1</option>
+            <option value="bedrock-claude-4-sonnet">Bedrock Claude 4 Sonnet</option>
+            <option value="bedrock-claude-4-sonnet-long-context">Bedrock Claude 4 Sonnet Long Context</option>
+            <option value="bedrock-claude-4-opus">Bedrock Claude 4 Opus</option>
+            <option value="bedrock-claude-4.1-opus-v1">Bedrock Claude 4.1 Opus v1</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="vertexai-claude-sonnet-3.5-v2">VertexAI Claude Sonnet 3.5 v2</option>
+            <option value="vertexai-claude-sonnet-3.7">VertexAI Claude Sonnet 3.7</option>
+            <option value="deepseek-r1">DeepSeek R1</option>
+            <option value="qwq-32b">QwQ-32B</option>
+        </select>
+    </div>
+
+    <!-- 原状态指示器 -->
+    <div id="status-indicator" class="flex items-center">
+        <span id="status-text">init...</span>
+        <div id="status-spinner" class="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+    </div>
+</div>
             </div>
         </header>
 
