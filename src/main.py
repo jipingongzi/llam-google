@@ -47,6 +47,7 @@ def start():
         print("start vectorize")
         query_engine = vector(file_id, file_path, file_name, image_dtos)
         print("-------------------------------------------------------------")
+    print("system init success")
     return query_engine
 
 

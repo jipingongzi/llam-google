@@ -115,36 +115,17 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
             if "pdf_image" == source_type:
                 image_path = "http://localhost:5000/pic/" + node.node.metadata.get('image_path', 'unknown')
                 print(image_path)
-                image_html = f'''
-                            <span class="ml-2 inline-block">
-                                <img 
-                                    src="{image_path}" 
-                                    alt="Preview of {file_name} page {page_number}"
-                                    class="pdf-preview-img cursor-zoom-in border border-gray-200 rounded-md"
-                                    data-full-src="{image_path}"
-                                    onclick="showImageModal(this)"
-                                    style="max-width: 80px; max-height: 120px; object-fit: contain;"
-                                >
-                            </span>
-                            <div id="imageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
-                                <button 
-                                    onclick="closeImageModal()" 
-                                    class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
-                                >
-                                    &times;
-                                </button>
-                                <img 
-                                    id="modalImage" 
-                                    src="" 
-                                    alt="Enlarged preview"
-                                    class="max-w-[90vw] max-h-[90vh] object-contain"
-                                >
-                            </div>
-                        '''
-                # 将图片HTML追加到ref后
+                image_html = (
+                    f'<span class="ml-2 mr-1 inline-block align-middle">'  # ml-2:文字到图间距，mr-1:图之间间距
+                    f'<img src="{quote(image_path, safe=":/")}" '
+                    f'alt="Preview of {file_name} page {page_number}" '
+                    f'class="pdf-preview-img cursor-zoom-in border border-gray-200 rounded-md" '
+                    f'data-full-src="{quote(image_path, safe=":/")}" '
+                    f'style="max-width: 80px; max-height: 120px; object-fit: contain;" '
+                    f'onclick="showImageModal(this)">'
+                    f'</span>'
+                )
                 ref += image_html
-
-
             sources.append(ref)
             added_items.add(unique_key)
 

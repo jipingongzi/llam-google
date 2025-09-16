@@ -15,7 +15,7 @@
                         secondary: '#f3f4f6',
                         user: '#e3f2fd',
                         ai: '#f5f5f5',
-                        reference: '#374151' // Reference 后文字的深灰色
+                        reference: '#374151'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -43,12 +43,10 @@
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
-            /* 解决文字溢出：自动换行 + 单词截断 */
             .text-wrap-break {
-                white-space: pre-wrap; /* 保留换行符，同时自动换行 */
-                word-break: break-word; /* 长单词/URL 强制截断，避免溢出 */
+                white-space: pre-wrap;
+                word-break: break-word;
             }
-            /* 文件列表悬停效果 */
             .file-item-hover {
                 transition: all 0.2s ease;
             }
@@ -57,22 +55,30 @@
                 transform: translateX(4px);
             }
         }
-
         .pdf-preview-img:hover {
-            border-color: #3b82f6;  /*  hover时边框变主题色 */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);  /* 轻微阴影增强层次感 */
+            border-color: #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
-
+        .pdf-preview-img {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0;
+            padding: 0;
+        }
+        .reference-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
         #imageModal {
-            backdrop-filter: blur(4px);  /* 背景模糊增强视觉效果 */
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-<!-- 主容器：文件列表 + 聊天区域 -->
 <div class="flex h-screen max-h-screen">
-    <!-- 左侧文件列表（固定宽度，响应式隐藏） -->
     <aside class="w-64 bg-white border-r border-gray-200 p-4 hidden md:block overflow-y-auto max-h-screen scrollbar-hide">
         <div class="mb-4">
             <h2 class="text-lg font-bold text-gray-800 flex items-center">
@@ -81,7 +87,6 @@
             </h2>
             <hr class="mt-2 mb-3 border-gray-200">
         </div>
-        <!-- 文件列表（写死链接） -->
         <ul class="space-y-2 text-gray-700">
             <li>
                 <a
@@ -103,13 +108,10 @@
                     PRD EPAM BMS system
                 </a>
             </li>
-            <!-- 可在此处添加更多文件 -->
         </ul>
     </aside>
 
-    <!-- 右侧聊天主区域（占满剩余宽度） -->
     <div class="flex-1 flex flex-col h-screen max-h-screen">
-        <!-- 头部 -->
         <header class="bg-primary text-white p-4 shadow-md">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold">Google Doc Chat</h1>
@@ -139,8 +141,6 @@
                 </div>
             </div>
         </main>
-
-        <!-- 输入区域 -->
         <footer class="bg-white border-t border-gray-200 p-4">
             <div class="container mx-auto max-w-3xl">
                 <form id="question-form" class="flex flex-col space-y-2">
@@ -179,7 +179,6 @@
         const statusText = document.getElementById('status-text');
         const statusSpinner = document.getElementById('status-spinner');
 
-        // 1. HTML 特殊字符转义（解决 <> 显示问题）
         function escapeHtml(text) {
             if (!text) return '';
             return text
@@ -190,7 +189,6 @@
                 .replace(/'/g, '&#039;');
         }
 
-        // 2. 检查系统初始化状态
         function checkInitialization() {
             fetch('/status')
                 .then(response => response.json())
@@ -216,7 +214,6 @@
                 });
         }
 
-        // 3. 添加系统消息
         function addSystemMessage(text, type = 'info') {
             const messageClass = type === 'error' ? 'bg-red-50' :
                                type === 'success' ? 'bg-green-50' : 'bg-blue-50';
@@ -241,7 +238,6 @@
             scrollToBottom();
         }
 
-        // 4. 添加用户消息
         function addUserMessage(text) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message-appear';
@@ -262,7 +258,6 @@
             return messageDiv;
         }
 
-        // 5. 添加AI消息容器（返回用于更新的元素）
         function addAiMessageContainer() {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message-appear';
@@ -273,9 +268,7 @@
                             <i class="fa fa-robot"></i>
                         </div>
                         <div class="flex-1">
-                            <!-- AI 响应内容（添加 text-wrap-break 解决溢出） -->
                             <div class="ai-response text-wrap-break"></div>
-                            <!-- 加载动画 -->
                             <div class="loading-indicator hidden mt-2">
                                 <div class="flex space-x-1">
                                     <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
@@ -297,45 +290,31 @@
             };
         }
 
-        // 6. 滚动到底部
         function scrollToBottom() {
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // 7. 处理 AI 响应（核心：检测 Reference 并改色）
         function handleAiResponseChunk(aiResponseElement, newToken) {
             const currentHtml = aiResponseElement.innerHTML;
             const hasReference = currentHtml.toLowerCase().includes('reference');
 
             if (hasReference) {
-                // Reference之后的内容：不转义，保留HTML标签（如链接）
                 aiResponseElement.innerHTML = currentHtml + `<span class="text-reference">${newToken}</span>`;
             } else {
-                // Reference之前的内容：仍需要转义特殊字符
                 const escapedToken = escapeHtml(newToken);
                 aiResponseElement.innerHTML = currentHtml + escapedToken;
             }
         }
 
-        // 8. 处理表单提交
         questionForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const question = questionInput.value.trim();
-
             if (!question) return;
-
-            // 清空输入框并重置高度
             questionInput.value = '';
             questionInput.style.height = 'auto';
-
-            // 添加用户消息
             addUserMessage(question);
-
-            // 添加AI消息容器
             const aiMessage = addAiMessageContainer();
             aiMessage.loadingIndicator.classList.remove('hidden');
-
-            // 发送请求
             fetch('/query', {
                 method: 'POST',
                 headers: {
@@ -369,7 +348,6 @@
                                     const data = JSON.parse(jsonStr);
 
                                     if (data.token) {
-                                        // 处理 AI 响应片段（检测 Reference 并改色）
                                         handleAiResponseChunk(aiMessage.responseElement, data.token);
                                         scrollToBottom();
                                     } else if (data.event === 'complete') {
@@ -413,59 +391,57 @@
             });
         });
 
-        // 9. 回车键触发发送（核心：监听 Enter 键，Shift+Enter 换行）
         questionInput.addEventListener('keydown', function(e) {
-            // Shift+Enter：换行（不触发发送）
             if (e.key === 'Enter' && e.shiftKey) {
-                return; // 保留默认换行行为
+                return;
             }
-            // 单独 Enter 键：触发表单提交
             else if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // 阻止默认换行
+                e.preventDefault();
                 if (!questionInput.disabled && questionInput.value.trim()) {
-                    questionForm.dispatchEvent(new Event('submit')); // 触发提交
+                    questionForm.dispatchEvent(new Event('submit'));
                 }
             }
         });
-
-        // 10. 调整 textarea 高度（随输入内容自适应）
         questionInput.addEventListener('input', function() {
             this.style.height = 'auto';
-            // 限制最大高度为 100px，避免输入框过高
             this.style.height = (this.scrollHeight > 100 ? 100 : this.scrollHeight) + 'px';
         });
-
-        // 初始化检查
         checkInitialization();
     });
 
-
-    // 显示图片放大弹窗
 function showImageModal(imgElem) {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
-    // 设置弹窗图片为原图
     modalImg.src = imgElem.getAttribute('data-full-src');
-    // 显示弹窗
     modal.classList.remove('hidden');
-    // 禁止页面滚动
     document.body.style.overflow = 'hidden';
 }
 
-// 关闭图片放大弹窗
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     modal.classList.add('hidden');
-    // 恢复页面滚动
     document.body.style.overflow = '';
 }
 
-// 点击弹窗背景也可关闭
 document.getElementById('imageModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeImageModal();
     }
 });
 </script>
+<div id="imageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+    <button
+            onclick="closeImageModal()"
+            class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+    >
+        &times;
+    </button>
+    <img
+            id="modalImage"
+            src=""
+            alt="Enlarged preview"
+            class="max-w-[90vw] max-h-[90vh] object-contain"
+    >
+</div>
 </body>
 </html>
