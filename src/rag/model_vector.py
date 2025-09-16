@@ -3,15 +3,15 @@ from urllib.parse import quote
 from uuid import uuid1
 from typing import List
 from typing import Generator
-from llama_index.core import SimpleDirectoryReader, Document, VectorStoreIndex, StorageContext, load_index_from_storage
+from llama_index.core import Document, VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.core.indices.base import BaseQueryEngine
 from dto.pdf_image_dto import pdf_image_dto
 from llama_index.core import Settings
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.readers.file import PDFReader
-from llama_index.readers.pdf_table import PDFTableReader
 from pathlib import Path
+from rag.model_pdf_table_loader import load_tables_with_pageinfo
 
 # import logging
 # import sys
@@ -28,17 +28,15 @@ Settings.embed_model = HuggingFaceEmbedding(
 
 def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dto]) -> BaseQueryEngine:
     print("vector:" + file_name)
-
+    persist_dir = "persist_dir"
     os.environ["PATH"] += os.pathsep + r"C:\Program Files\gs\gs10.06.0\bin"
+
     text_reader = PDFReader()
     text_docs = text_reader.load_data(file=Path(file_path))
 
-    table_reader = PDFTableReader()
-    table_docs = table_reader.load_data(file=Path(file_path), pages="all")
+    table_docs = load_tables_with_pageinfo(file=Path(file_path), pages="all")
     pdf_documents = text_docs + table_docs
 
-    persist_dir = "persist_dir"
-    # pdf_documents = SimpleDirectoryReader(input_files=[file_path]).load_data()
     enhanced_pdf_docs = []
     for doc in pdf_documents:
         page_num = doc.metadata.get("page_label") or doc.metadata.get("page_number", "unknown")
@@ -80,11 +78,11 @@ def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dt
         print("inser file:" + file_name)
         index.insert_nodes(all_documents)
         index.storage_context.persist(persist_dir)
-        return index.as_query_engine(similarity_top_k=5, streaming=True)
+        return index.as_query_engine(similarity_top_k=3, streaming=True)
     print("init store dir")
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
-    return vector_index.as_query_engine(similarity_top_k=5, streaming=True)
+    return vector_index.as_query_engine(similarity_top_k=3, streaming=True)
 
 
 def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, None]:
@@ -114,13 +112,6 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
         source_type = node.node.metadata.get('source_type', 'unknown')
         page_number = node.node.metadata.get('page_number', 'unknown')
         file_link = f"https://docs.google.com/document/d/{file_id}/view"
-        print(
-            f"{i}. file id: {node.node.metadata.get('file_id', 'unknown')}, "
-            f"file name: {file_name}, "
-            f"PDF page: {page_number}, "
-            f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
-            f"score: {node.score:.4f}"
-        )
         unique_key = f"{file_id}_{str(page_number)}"
         if unique_key not in added_items:
             ref = f'<a href="{quote(file_link, safe=":/")}" target="_blank" class="text-primary hover:underline">{file_name}</a> - page {page_number}'
