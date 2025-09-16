@@ -116,7 +116,7 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
                 image_path = "http://localhost:5000/pic/" + node.node.metadata.get('image_path', 'unknown')
                 print(image_path)
                 image_html = (
-                    f'<span class="ml-2 mr-1 inline-block align-middle">'  # ml-2:文字到图间距，mr-1:图之间间距
+                    f'<span class="ml-2 mr-1 inline-block align-middle">'
                     f'<img src="{quote(image_path, safe=":/")}" '
                     f'alt="Preview of {file_name} page {page_number}" '
                     f'class="pdf-preview-img cursor-zoom-in border border-gray-200 rounded-md" '
