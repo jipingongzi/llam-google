@@ -10,6 +10,9 @@ from llama_index.core import Settings
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.readers.file import PDFReader
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.postprocessor import SentenceTransformerRerank
 from pathlib import Path
 from rag.model_pdf_table_loader import load_tables_with_pageinfo
 
@@ -69,20 +72,20 @@ def vector(file_id: str, file_path: str, file_name: str, dtos: List[pdf_image_dt
     all_documents = enhanced_pdf_docs + dto_documents
     if os.path.exists(persist_dir) and os.path.isdir(persist_dir):
         storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
-        index = load_index_from_storage(storage_context)
-        for ref_doc_id, ref_doc_info in index.ref_doc_info.items():
+        vector_index = load_index_from_storage(storage_context)
+        for ref_doc_id, ref_doc_info in vector_index.ref_doc_info.items():
             if ref_doc_info.metadata.get("file_id") == file_id:
                 print("delete file:" + file_name)
                 print("delete ref doc:" + ref_doc_info.to_json())
-                index.delete_ref_doc(ref_doc_id, delete_from_docstore=True)
-        print("inser file:" + file_name)
-        index.insert_nodes(all_documents)
-        index.storage_context.persist(persist_dir)
-        return index.as_query_engine(similarity_top_k=3, streaming=True)
+                vector_index.delete_ref_doc(ref_doc_id, delete_from_docstore=True)
+        print("insert file:" + file_name)
+        vector_index.insert_nodes(all_documents)
+        vector_index.storage_context.persist(persist_dir)
+        return create_query_engine(vector_index)
     print("init store dir")
     vector_index = VectorStoreIndex.from_documents(all_documents)
     vector_index.storage_context.persist(persist_dir)
-    return vector_index.as_query_engine(similarity_top_k=3, streaming=True)
+    return create_query_engine(vector_index)
 
 
 def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, None]:
@@ -105,7 +108,6 @@ def query(question: str, query_engine: BaseQueryEngine) -> Generator[str, None, 
         yield token
     sources = []
     added_items = set()
-    print("\n\nsource：")
     for i, node in enumerate(answer.source_nodes, 1):
         file_id = node.node.metadata.get('file_id', 'unknown')
         file_name = node.node.metadata.get('file_name', 'unknown')
@@ -154,3 +156,25 @@ def query_print(question: str, query_engine: BaseQueryEngine):
             f"source type: {node.node.metadata.get('source_type', 'unknown')}, "
             f"score: {node.score:.4f}"
         )
+
+
+def create_rank_query_engine(index: VectorStoreIndex) -> BaseQueryEngine:
+    retriever = VectorIndexRetriever(
+        index=index,
+        similarity_top_k=10
+    )
+
+    reranker = SentenceTransformerRerank(
+        model="BAAI/bge-reranker-large",
+        top_n=3
+    )
+
+    return RetrieverQueryEngine.from_args(
+        retriever=retriever,
+        node_postprocessors=[reranker],
+        streaming=True
+    )
+
+
+def create_query_engine(index: VectorStoreIndex) -> BaseQueryEngine:
+    return index.as_query_engine(similarity_top_k=3, streaming=True)
